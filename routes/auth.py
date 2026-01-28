@@ -8,13 +8,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 auth_bp = Blueprint("auth", __name__)
-SECRET_KEY = os.getenv("JWT_SECRET", "mysecretkey")  # put this in .env
+SECRET_KEY = os.getenv("JWT_SECRET", "mysecretkey") 
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.json
     email = data.get("email")
-    password = data.get("password")  # user_code
+    password = data.get("password")
 
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
@@ -30,7 +30,7 @@ def login():
 
     user = response.data[0]
 
-    # Create JWT token, expires in 15 days
+   
     expiration = datetime.utcnow() + timedelta(days=15)
     token = jwt.encode(
         {"user_id": user["id"], "exp": expiration},
