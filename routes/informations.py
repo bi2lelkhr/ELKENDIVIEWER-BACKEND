@@ -9,9 +9,7 @@ SECRET_KEY = os.getenv("JWT_SECRET", "mysecretkey")
 
 informations_bp = Blueprint("informations", __name__)
 
-# =========================
-# AUTH HELPERS
-# =========================
+
 def verify_token(request):
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -52,9 +50,7 @@ def require_role(user_id, allowed_roles):
     return True, {"role": role, "email": email}
 
 
-# =========================
-# D – ADD INFORMATION
-# =========================
+
 @informations_bp.route("/add", methods=["POST"])
 def add_information():
     decoded, error = verify_token(request)
@@ -86,9 +82,7 @@ def add_information():
     }), 201
 
 
-# =========================
-# D / A – MY INFORMATIONS
-# =========================
+
 @informations_bp.route("/my-informations", methods=["GET"])
 def get_my_informations():
     decoded, error = verify_token(request)
@@ -113,9 +107,7 @@ def get_my_informations():
     })
 
 
-# =========================
-# USER PROFILE
-# =========================
+
 @informations_bp.route("/profile", methods=["GET"])
 def get_profile():
     decoded, error = verify_token(request)
@@ -144,9 +136,7 @@ def get_profile():
 
 
 
-# =========================
-# A – ALL INFORMATIONS (FILTERS)
-# =========================
+
 @informations_bp.route("/all-informations", methods=["GET"])
 def get_all_informations():
     decoded, error = verify_token(request)
@@ -184,9 +174,7 @@ def get_all_informations():
     })
 
 
-# =========================
-# A – USERS MANAGEMENT
-# =========================
+
 @informations_bp.route("/users", methods=["GET"])
 def get_users():
     decoded, error = verify_token(request)
@@ -232,11 +220,11 @@ def create_user():
     if role not in ["A", "D", "R"]:
         return jsonify({"error": "Invalid role"}), 400
 
-    # 👇 Require view ONLY for role R
+  
     if role == "R" and not view:
         return jsonify({"error": "View is required for role R"}), 400
 
-    # 👇 Prevent view for non-R roles
+   
     if role != "R" and view is not None:
         return jsonify({"error": "View is only allowed for role R"}), 400
 
@@ -252,7 +240,7 @@ def create_user():
         "role": role
     }
 
-    # 👇 Add view only when role == R
+   
     if role == "R":
         user_data["view"] = view
 
@@ -277,7 +265,7 @@ def update_user(user_id):
     data = request.json or {}
     update_data = {}
 
-    # Get current user (needed for role/view logic)
+   
     current_user = (
         supabase
         .table("users")
@@ -292,14 +280,14 @@ def update_user(user_id):
 
     current_role = current_user.data["role"]
 
-    # ========= BASIC FIELDS =========
+ 
     if "email" in data:
         update_data["email"] = data["email"]
 
     if "user_code" in data:
         update_data["user_code"] = data["user_code"]
 
-    # ========= ROLE HANDLING =========
+  
     new_role = current_role
     if "role" in data:
         if data["role"] not in ["A", "D", "R"]:
@@ -307,14 +295,14 @@ def update_user(user_id):
         new_role = data["role"]
         update_data["role"] = new_role
 
-    # ========= VIEW HANDLING =========
+ 
     if new_role == "R":
-        # Role is R → view REQUIRED
+      
         if "view" not in data:
             return jsonify({"error": "View is required for role R"}), 400
         update_data["view"] = data["view"]
     else:
-        # Role is NOT R → view MUST be null
+       
         update_data["view"] = None
 
     if not update_data:
@@ -353,28 +341,28 @@ def get_my_view():
     if not allowed:
         return jsonify({"error": "Access denied"}), 403
 
-    # Get the 'view' column (e.g., "CVS", "CNS", etc.)
+  
     res_user = supabase.table("users").select("view").eq("id", decoded["user_id"]).single().execute()
     if not res_user.data or not res_user.data.get("view"):
         return jsonify({"error": "No view assigned to user"}), 403
 
-    user_view = res_user.data.get("view").split(",")  # If multiple views, assume comma-separated
-    user_view = [v.strip() for v in user_view]  # remove extra spaces
+    user_view = res_user.data.get("view").split(",") 
+    user_view = [v.strip() for v in user_view]  
 
-    # Build query
+
     query = supabase.table("informations").select("*")
 
-    # Filter by user view (type_bu) unless it's "ALL"
+   
     if "ALL" not in user_view:
         query = query.in_("type_bu", user_view)
     
-    # If user has "ALL" view and wants to filter by specific BU
+   
     else:
         type_bu = request.args.get("type_bu")
         if type_bu:
             query = query.eq("type_bu", type_bu)
 
-    # Optional filters
+ 
     type_info = request.args.get("type_info")
     info_date = request.args.get("date")
     from_date = request.args.get("from")
