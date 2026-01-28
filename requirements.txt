@@ -1,0 +1,10 @@
+flask
+flask-cors
+python-dotenv
+supabase
+PyJWT
+yarl==1.22.0
+serverless-wsgi
+gunicorn
+flask-cors
+requests
