@@ -403,3 +403,36 @@ def get_my_view():
         "count": len(combined_data),
         "data": combined_data
     })
+
+
+@informations_bp.route("/<information_id>", methods=["DELETE"])
+def delete_information(information_id):
+    
+    decoded, error = verify_token(request)
+    if error:
+        return jsonify({"error": error}), 401
+
+  
+    allowed, _ = require_role(decoded["user_id"], ["A"])
+    if not allowed:
+        return jsonify({"error": "Access denied"}), 403
+
+  
+    info = (
+        supabase.table("informations")
+        .select("id")
+        .eq("id", information_id)
+        .execute()
+    )
+
+    if not info.data:
+        return jsonify({"error": "Information not found"}), 404
+
+ 
+    supabase.table("informations").delete().eq("id", information_id).execute()
+
+    return jsonify({
+        "message": "Information deleted successfully",
+        "id": information_id
+    }), 200
+
